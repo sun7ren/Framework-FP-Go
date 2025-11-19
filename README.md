@@ -1,7 +1,7 @@
 | Name  | NRP |
 | ------------- | ------------- |
-| Arini Nur Azizah  | Content Cell  |
-| Fazle Robby Pratama  | Content Cell  |
+| Arini Nur Azizah  | 5025231079  |
+| Fazle Robby Pratama  | 5025231011  |
 
 # CaloriSync
 
