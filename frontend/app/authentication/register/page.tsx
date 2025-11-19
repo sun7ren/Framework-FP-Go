@@ -32,8 +32,8 @@ export default function Register() {
           />
         </div>
 
-        <div className="w-1/2 flex flex-col align-center items-center">
-          <h1 className="text-5xl font-bold mb-4 mt-8 text-center text-[#1E6F01]">
+        <div className="w-1/2 flex flex-col align-center items-center mt-5">
+          <h1 className="text-5xl font-bold mb-4 text-center text-[#1E6F01]">
             Register <span className="text-[#ED9417] italic font-bold">Now</span> 
           </h1>
 
@@ -45,7 +45,7 @@ export default function Register() {
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={input_styles}
+                className={`${input_styles} bg-white`}
                 required
             />
             <input
@@ -53,13 +53,13 @@ export default function Register() {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={input_styles}
+                className={`${input_styles} bg-white`}
                 required
             />
             <select
                 value={role}
                 onChange={handleRoleChange} 
-                className={`${input_styles} pr-10`} 
+                className={`${input_styles} bg-white`}
                 required
             >
                 <option value="User">Register as User</option>

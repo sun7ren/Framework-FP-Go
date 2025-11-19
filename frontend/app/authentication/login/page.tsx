@@ -26,8 +26,8 @@ export default function Login() {
           />
         </div>
 
-        <div className="w-1/2 flex flex-col align-center items-center">
-          <h1 className="text-5xl font-bold mb-3 mt-8 text-center text-[#1E6F01]">
+        <div className="w-1/2 flex flex-col align-center items-center mt-5">
+          <h1 className="text-5xl font-bold mb-3 text-center text-[#1E6F01]">
             Login to 
           </h1>
           <h1 className="text-5xl font-bold mb-4 text-center text-[#1E6F01]">
@@ -42,7 +42,7 @@ export default function Login() {
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={input_styles}
+                className={`${input_styles} bg-white`}
                 required
             />
             <input
@@ -50,7 +50,7 @@ export default function Login() {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={input_styles}
+                className={`${input_styles} bg-white`}
                 required
             />
 
