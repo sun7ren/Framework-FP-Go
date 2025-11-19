@@ -1,7 +1,11 @@
-Arini Nur Azizah 5025231079
-Fazle Robby Pratama
+| Name  | NRP |
+| ------------- | ------------- |
+| Arini Nur Azizah  | Content Cell  |
+| Fazle Robby Pratama  | Content Cell  |
 
 # CaloriSync
+
+Logging daily meals, Nutritionist Themed
 
 - Users can log their meals and instantly see if they are within, below, or above their recommended intake. 
 - Nutritionists can review these logs and leave personalized comments, offering guidance that’s easy to follow and tailored to your daily choices.
