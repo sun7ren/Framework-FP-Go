@@ -1,3 +1,14 @@
+# As of 19 Nov 2025
+
+<img width="1440" height="815" alt="Screenshot 2025-11-19 at 10 31 45 AM" src="https://github.com/user-attachments/assets/c56cdcd5-95bc-4280-8eaf-bfb62c0b83f1" />
+<img width="1440" height="816" alt="Screenshot 2025-11-19 at 10 31 53 AM" src="https://github.com/user-attachments/assets/ef374e0e-7608-496e-9c24-99551c2bd6af" />
+<img width="1439" height="810" alt="Screenshot 2025-11-19 at 10 32 00 AM" src="https://github.com/user-attachments/assets/742ff808-28a2-4aa3-a096-129f79cb0174" />
+<img width="1439" height="809" alt="Screenshot 2025-11-19 at 10 32 06 AM" src="https://github.com/user-attachments/assets/67e7ee47-7728-4e5f-b5e7-79e<img width="1440" height="811" alt="Screenshot 2025-11-19 at 10 32 13 AM" src="https://github.com/user-attachments/assets/91f4a552-43a4-49a5-ab26-be1994af8553" />
+6b59fbb52" />
+<img width="1440" height="815" alt="Screenshot 2025-11-19 at 10 32 18 AM" src="https://github.com/user-attachments/assets/5f60d6dd-7536-45c8-9ea1-5446deff4df4" />
+
+
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
