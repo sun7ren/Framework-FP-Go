@@ -4,13 +4,47 @@ import HomeHeader from "../../../components/homeHeader";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation"; 
+import api from "@/utils/api"; 
 
 const input_styles = "border border-black border-2 rounded-lg px-5 py-5 focus:outline-none focus:ring-2 focus:ring-[#5D9008] text-lg";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState(""); 
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const response = await api.post("/login", {
+        username: username,
+        password: password,
+      });
+
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("role", response.data.role);
+      localStorage.setItem("user_id", response.data.user_id);
+
+      if (response.data.role === "Nutritionist") {
+        router.push("/dashboard-nutritionist"); 
+      } else {
+        router.push("/dashboard-user/intakeLogs"); 
+      }
+      
+      alert("Login Successful!");
+
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Login failed. Please check your credentials.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -35,13 +69,14 @@ export default function Login() {
           </h1>
 
           <form
+            onSubmit={handleLogin}
             className="flex flex-col gap-10 px-20 mt-10 w-full max-w-2xl"
           >
             <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                placeholder="Username" 
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className={`${input_styles} bg-white`}
                 required
             />
@@ -54,12 +89,14 @@ export default function Login() {
                 required
             />
 
-            {error && <p className="text-red-500 text-center">{error}</p>}
+            {error && <p className="text-red-500 text-center font-bold">{error}</p>}
+            
             <button
                 type="submit"
-                className={`${input_styles} bg-[#2B840B] border-[#1E6F01] font-bold text-white hover:bg-[#5D9008] hover:text-white cursor-pointer`}
+                disabled={loading}
+                className={`${input_styles} bg-[#2B840B] border-[#1E6F01] font-bold text-white hover:bg-[#5D9008] hover:text-white cursor-pointer disabled:opacity-50`}
             >
-                Login
+                {loading ? "Logging in..." : "Login"}
             </button>
           </form>
           <p className="text-xl mt-10 text-[#775B2B] font-bold">Don't have an account yet? 

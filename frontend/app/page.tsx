@@ -14,10 +14,6 @@ const backgroundImages = {
 const bowlImage = {
   bowl1: "/home-bowl/bowl1.png",
   bowl2: "/home-bowl/bowl2.png",
-  // bowl3: "/home-bowl/bowl3.png",
-  // bowl4: "/home-bowl/bowl4.png",
-  // bowl5: "/home-bowl/bowl5.png",
-  // bowl6: "/home-bowl/bowl6.png",
 };
 
 
