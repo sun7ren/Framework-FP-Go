@@ -1,10 +1,10 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8080/api", // Your Go Backend URL
+  baseURL: "http://localhost:8080/api", 
 });
 
-// Automatically add the Token to every request if we have it
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
@@ -12,5 +12,15 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+export const getCurrentUser = async () => {
+  try {
+    const res = await api.get("/me");
+    return res.data;
+  } catch (err) {
+    console.error("Failed to fetch current user:", err);
+    return null;
+  }
+};
 
 export default api;

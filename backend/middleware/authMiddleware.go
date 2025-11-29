@@ -14,7 +14,6 @@ func AuthMiddleware() gin.HandlerFunc {
 		// 1. Get the token from the Header
 		tokenString := c.GetHeader("Authorization")
 
-		// Remove "Bearer " prefix if present
 		if tokenString == "" || !strings.HasPrefix(tokenString, "Bearer ") {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token required"})
 			c.Abort()

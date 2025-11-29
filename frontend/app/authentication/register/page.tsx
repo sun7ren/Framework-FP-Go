@@ -37,6 +37,7 @@ export default function Register() {
       if (response.data?.token) {
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("role", response.data.role);
+        localStorage.setItem("username", response.data.username);
 
         if (response.data.role === "Nutritionist") {
           router.push("/dashboard-nutritionist");
