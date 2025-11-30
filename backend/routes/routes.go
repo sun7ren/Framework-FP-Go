@@ -8,14 +8,12 @@ import (
 )
 
 func SetupRoutes(r *gin.Engine) {
-	// Public Routes (No Token Needed)
 	public := r.Group("/api")
 	{
 		public.POST("/register", controllers.Register)
 		public.POST("/login", controllers.Login)
 	}
 
-	// Protected Routes (Token Required)
 	protected := r.Group("/api")
 	protected.Use(middleware.AuthMiddleware())
 	{
@@ -23,11 +21,12 @@ func SetupRoutes(r *gin.Engine) {
 		protected.PUT("/profile", controllers.UpdateProfile)
 
 		// Intake Routes
-		// protected.GET("/intake", controllers.GetDailyIntake)
-		protected.GET("/intake", controllers.GetOrCreateTodayIntake)
-		protected.POST("/intake/:di_id/meal", controllers.AddMeal)        // Add Meal to Log
-		protected.PATCH("/intake/:di_id/lock", controllers.LockIntake)    // Lock the intake
-		protected.DELETE("/intake/meal/:meal_id", controllers.DeleteMeal) // Delete Meal
+		protected.GET("/intake", controllers.GetDailyIntake)
+
+		protected.POST("/intake/:di_id/meal", controllers.AddMeal)
+		protected.PATCH("/intake/:di_id/lock", controllers.LockIntake)
+		protected.DELETE("/intake/meal/:meal_id/delete", controllers.DeleteMeal)
+		protected.PUT("/intake/meal/:meal_id/edit", controllers.EditMeal)
 
 		// Nutritionist Routes
 		protected.GET("/nutritionist/intakes", controllers.GetAllIntakes)

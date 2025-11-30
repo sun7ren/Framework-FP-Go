@@ -1,217 +1,265 @@
 "use client";
 
-import InsideHeader from "@/components/insideHeader";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import Header from "@/components/insideHeader";
+import { getCurrentUser } from "@/utils/api";
 import Image from "next/image";
-import api, { getCurrentUser } from "@/utils/api";
+import Modal from "./Modal"
+import {
+  getIntakeByDate,
+  addMeal,
+  updateMeal,
+  deleteMeal,
+  IntakeResponse,
+  Meal,
+  lockIntake,
+} from "@/utils/intakeApi";
 
-interface Meal {
-  M_ID: string;
-  food_name: string;
-  calories: number;
-  time: string;
-}
+const tab_style = "py-3 rounded-4xl w-100 gap-10 font-semibold border transition-all bg-[#FFF6E8] text-[#4A3A1E] border-[#B28B00]"
+const activeTab_style = "py-3 rounded-4xl w-100 gap-10 font-semibold border transition-all bg-[#FFC300] text-[#4A3A1E] border-[#B28B00]"
+const button_styles ="px-6 py-2 rounded-lg font-semibold"
 
-interface IntakeResponse {
-  di_id: string;
-  di_date: string;
-  di_total_calories: number;
-  meals: Meal[];
-}
-
-export default function IntakeLogs() {
+export default function IntakeLogsPage() {
+  const [activeTab, setActiveTab] = useState<"Today" | "Yesterday" | "2 Days Ago">("Today");
+  const [selectedDate, setSelectedDate] = useState("");
   const [username, setUsername] = useState("");
+
   const [intake, setIntake] = useState<IntakeResponse | null>(null);
-  const [tab, setTab] = useState("today");
-  const [isAddMealOpen, setIsAddMealOpen] = useState(false);
-  const [mealName, setMealName] = useState("");
-  const [calories, setCalories] = useState("");
-  const [time, setTime] = useState("");
+  const [meals, setMeals] = useState<Meal[]>([]);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
-  const total = intake?.meals?.reduce((sum, meal) => sum + meal.calories, 0) ?? 0;
+
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const isLocked = intake?.is_locked === true;
+
+
+  const [mealForm, setMealForm] = useState({
+    food_name: "",
+    calories: "",
+    time: "",
+  });
+
+  const [editingMealId, setEditingMealId] = useState<number | null>(null);
+
+  const filteredMeals = meals.filter((m) =>
+    m.food_name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const computeDate = () => {
+    const d = new Date();
+    if (activeTab === "Yesterday") d.setDate(d.getDate() - 1);
+    if (activeTab === "2 Days Ago") d.setDate(d.getDate() - 2);
+    return d.toISOString().split("T")[0];
+  };
 
   const fetchIntake = async () => {
+    setLoading(true);
     try {
-      const res = await api.get("/intake");
-      setIntake(res.data);
+      const date = computeDate();
+      setSelectedDate(date);
+
+      const data = await getIntakeByDate(date);
+      if (activeTab === "Yesterday" || activeTab === "2 Days Ago") {
+      if (data && !data.is_locked) {
+        await lockIntake(data.di_id);
+        data.is_locked = true; 
+      }
+      }
+      setIntake(data ?? null);
+      setMeals(data?.meals ?? []);
     } catch (err) {
-      console.error("Failed to fetch intake:", err);
+      console.error(err);
+      setIntake(null);
+      setMeals([]);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
     fetchIntake();
-
-    const fetchUser = async () => {
-      const data = await getCurrentUser();
+    getCurrentUser().then((data) => {
       setUsername(data?.user?.username || "");
-    };
-    fetchUser();
-  }, []);
+    });
+  }, [activeTab]);
 
-  const submitMeal = async () => {
-  if (!intake?.di_id) return;
+  const handleAddMeal = async () => {
+    if (!intake?.di_id) return;
 
-  try {
-    const res = await api.post(`/intake/${intake.di_id}/meal`, {
-      food_name: mealName,
-      calories: Number(calories),
-      time: time,
+    await addMeal(intake.di_id, {
+      food_name: mealForm.food_name,
+      calories: Number(mealForm.calories),
+      time: mealForm.time || undefined,
     });
 
-    setMealName("");
-    setCalories("");
-    setTime("");
-    setIsAddMealOpen(false);
-  } catch (err) {
-    console.error("Failed to add meal:", err);
-  }
-};
+    setShowAddModal(false);
+    setMealForm({ food_name: "", calories: "", time: "" });
 
-
-  const deleteMeal = async (mealId: string) => {
-    if (!intake) return;
-    try {
-      await api.delete(`/intake/meal/${mealId}`);
-      fetchIntake();
-    } catch (err) {
-      console.error("Failed to delete meal:", err);
-    }
+    fetchIntake(); 
   };
 
-  const filteredMeals = (intake?.meals || []).filter((meal) =>
-    meal.food_name.toLowerCase().includes(search.toLowerCase())
-  );
+  const openEditModal = (meal: Meal) => {
+    setEditingMealId(meal.M_ID);
+    setMealForm({
+      food_name: meal.food_name,
+      calories: String(meal.calories),
+      time: meal.time ?? "",
+    });
+    setShowEditModal(true);
+  };
 
-  useEffect(() => {
-  console.log("Intake data:", intake);
-}, [intake]);
+  const handleEditMeal = async () => {
+    if (editingMealId === null) return;
 
+    await updateMeal(editingMealId, {
+      food_name: mealForm.food_name,
+      calories: Number(mealForm.calories),
+      time: mealForm.time || undefined,
+    });
+
+    setShowEditModal(false);
+    setEditingMealId(null);
+    setMealForm({ food_name: "", calories: "", time: "" });
+
+    fetchIntake();
+  };
+
+  const totalCalories = meals.reduce((sum, m) => sum + (m.calories || 0), 0);
 
   return (
     <>
-      <InsideHeader />
+      <Header />
       <main className="min-h-screen mx-20 mt-10">
-        <h1 className="font-bold text-4xl text-[#774D06]">
-          Hi <span className="text-[#ED9417] italic">{username || "User"}</span>, your total calories today is {total ?? 0} kcal
-        </h1>
+          <h1 className="font-bold text-4xl text-[#774D06]">
+            Hi <span className="text-[#ED9417] italic">{username}, </span>you've consumed 
+            <span className="text-[#ED9417]"> {totalCalories} Calories</span> {activeTab} ({selectedDate})
+          </h1>
 
-        <div className="flex flex-row bg-[#F0E0C6] px-10 py-5 rounded-4xl mt-10 gap-10 content-center">
-          <button onClick={() => setTab("today")} className="py-3 rounded-4xl w-100 gap-10 font-semibold border transition-all bg-[#FFC300] text-[#4A3A1E] border-[#B28B00]">Today</button>
-          <button onClick={() => setTab("yesterday")} className="py-3 rounded-4xl w-100 gap-10 font-semibold border transition-all bg-[#FFF6E8] text-[#665944] border-[#B2A48C]">Yesterday</button>
-          <button onClick={() => setTab("2_days")} className="py-3 rounded-4xl w-100 gap-10 font-semibold border transition-all bg-[#FFF6E8] text-[#665944] border-[#B2A48C]">2 Days Before</button>
+        {/* Tabs */}
+        <div className="flex gap-5 bg-[#F0E0C6] px-10 py-5 rounded-4xl mt-5">
+          <button 
+          className={activeTab === "Today" ? activeTab_style : tab_style}
+          onClick={() => setActiveTab("Today")} >Today</button>
+
+          <button 
+          className={activeTab === "Yesterday" ? activeTab_style : tab_style}
+          onClick={() => setActiveTab("Yesterday")}>Yesterday</button>
+
+          <button 
+          className={activeTab === "2 Days Ago" ? activeTab_style : tab_style}
+          onClick={() => setActiveTab("2 Days Ago")}>2 Days Before</button>
         </div>
 
-        <div className="overflow-x-auto mt-10">
-          <div className="flex flex-row bg-white border-t border-l border-r border-[#B2A48C] rounded-lg p-5 justify-between items-center">
-            <div className="flex items-center bg-[#F8F6F3] border border-[#B2A48C] rounded-lg px-4 py-2 gap-3 w-[350px]">
-              <input
-                type="text"
-                placeholder="Search Keyword"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="flex-1 bg-transparent text-lg focus:outline-none"
-              />
-            </div>
-
-            <div className="flex flex-row gap-4">
+        {/* Search + Buttons */}
+        <div className="border-t-[#B2A48C] border-r-[#B2A48C] border-l-[#B2A48C] mt-10 bg-white border p-5 rounded-lg flex justify-between items-center">
+          <input
+            type="text"
+            placeholder="Search"
+            value={search}
+            className="border border-[#B2A48C] px-3 py-2 rounded-lg w-80"
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <div className="flex flex-row gap-4">
+            <button
+              onClick={() => {
+                setMealForm({ food_name: "", calories: "", time: "" });
+                setEditingMealId(null);
+                setShowEditModal(false);
+                setShowAddModal(true);
+              }}
+              className="bg-[#FFC300] text-[#8A5203] px-6 py-3 rounded-lg font-semibold hover:bg-[#FFD643] transition"
+            >
+              Add Meal
+            </button>
+            {activeTab === "Today" && !isLocked && (
               <button
-                onClick={() => intake?.di_id && setIsAddMealOpen(true)}
-                className="bg-[#FFC300] text-[#8A5203] px-6 py-3 rounded-lg font-semibold hover:bg-[#FFD643] transition"
+                onClick={async () => {
+                  if (!intake?.di_id) return;
+                  await lockIntake(intake.di_id);
+                  fetchIntake();
+                }}
+                className="bg-green-600 text-white px-6 py-3 rounded-lg"
               >
-                + Add New Meal
+                Done for Today
               </button>
-              <button className="bg-[#2B840B] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#3F9A1A] transition">
-                Done Today
-              </button>
-            </div>
+            )}
           </div>
+        </div>
 
-          <table className="table bg-white border border-[#B2A48C]">
-            <thead className="text-center bg-[#FFF1C5] text-[#9C5C03] font-semibold">
+        {/* Table */}
+        <table className="table bg-white border border-[#B2A48C] text-md">
+          <thead className="text-center bg-[#FFF1C5] text-[#9C5C03] font-semibold">
+            <tr>
+              <th>Index</th>
+              <th>Meal</th>
+              <th>Calories</th>
+              <th>Time</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {loading ? (
               <tr>
-                <th>Index</th>
-                <th>Meal</th>
-                <th>Calories</th>
-                <th>Time</th>
-                <th>Actions</th>
+                <td colSpan={5} className="text-center py-5">Loading...</td>
               </tr>
-            </thead>
-
-            <tbody className="text-center">
-              {filteredMeals.length === 0 ? (
-                <tr key="no-meals">
-                  <td colSpan={5} className="py-6 text-[#9C5C03] italic">
-                    <div className="flex flex-col items-center justify-center gap-3">
-                      <Image src="/logo/ModalLogo.png" alt="No meals" width={100} height={60} />
-                      <span className="text-xl">No meals added yet.</span>
-                    </div>
+            ) : filteredMeals.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="py-6 text-[#9C5C03] italic">
+                  <div className="flex flex-col items-center justify-center gap-3">
+                    <Image src="/logo/ModalLogo.png" alt="No meals" width={100} height={60} />
+                    <span className="text-xl">No Intake Here</span>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              filteredMeals.map((m, i) => (
+                <tr key={m.M_ID}>
+                  <td className="text-center text-md">{i + 1}</td>
+                  <td className="text-center text-md">{m.food_name}</td>
+                  <td className="text-center text-md">{m.calories}</td>
+                  <td className="text-center text-md">{m.time}</td>
+                  <td className="flex items-center justify-center gap-2">
+                    <button
+                      disabled={isLocked}
+                      className={`${button_styles} ${isLocked ? "bg-gray-400" : "bg-[#FFC300] text-[#8A5203] hover:bg-[#FFD643] transition"}`}
+                      onClick={() => !isLocked && openEditModal(m)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                        disabled={isLocked}
+                        className={`${button_styles} ${isLocked ? "bg-gray-400" : "bg-red-600 text-white hover:bg-green-800 transition"}`}
+                        onClick={() => !isLocked && deleteMeal(m.M_ID).then(fetchIntake)}
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
-              ) : (
-                filteredMeals.map((meal, index) => (
-                  <tr key={meal.M_ID}>
-                    <th>{index + 1}</th>
-                    <td>{meal.food_name}</td>
-                    <td>{meal.calories}</td>
-                    <td>{meal.time}</td>
-                    <td className="flex items-center justify-center gap-2">
-                      <button
-                        onClick={() => deleteMeal(meal.M_ID)}
-                        className="px-3 py-1 bg-red-600 text-white rounded-md"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+              ))
+            )}
+          </tbody>
+        </table>
 
-        {isAddMealOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-md w-[350px] space-y-4">
-              <h2 className="text-xl font-semibold">Add Meal</h2>
+        {/* Modals */}
+        {showAddModal && (
+          <Modal
+            title="Add Meal"
+            onCancel={() => setShowAddModal(false)}
+            onSubmit={handleAddMeal}
+            mealForm={mealForm}
+            setMealForm={setMealForm}
+          />
+        )}
 
-              <input
-                type="text"
-                placeholder="Meal Name"
-                value={mealName}
-                onChange={(e) => setMealName(e.target.value)}
-                className="w-full border p-2 rounded"
-              />
-
-              <input
-                type="number"
-                placeholder="Calories"
-                value={calories}
-                onChange={(e) => setCalories(e.target.value)}
-                className="w-full border p-2 rounded"
-              />
-
-              <input
-                type="time"
-                placeholder="Time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className="w-full border p-2 rounded"
-              />
-
-              <div className="flex justify-end gap-3">
-                <button onClick={() => setIsAddMealOpen(false)} className="px-3 py-1 border rounded">
-                  Cancel
-                </button>
-                <button
-                  onClick={submitMeal}
-                  className="px-4 py-1 bg-blue-600 text-white rounded"
-                >
-                  Add
-                </button>
-              </div>
-            </div>
-          </div>
+        {showEditModal && (
+          <Modal
+            title="Edit Meal"
+            onCancel={() => setShowEditModal(false)}
+            onSubmit={handleEditMeal}
+            mealForm={mealForm}
+            setMealForm={setMealForm}
+          />
         )}
       </main>
     </>
