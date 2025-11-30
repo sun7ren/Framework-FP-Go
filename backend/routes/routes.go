@@ -19,6 +19,7 @@ func SetupRoutes(r *gin.Engine) {
 	{
 		protected.GET("/me", controllers.GetCurrentUser)
 		protected.PUT("/profile", controllers.UpdateProfile)
+		protected.GET("/profile/info", controllers.GetProfile)
 
 		// Intake Routes
 		protected.GET("/intake", controllers.GetDailyIntake)

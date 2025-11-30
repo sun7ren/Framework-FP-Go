@@ -32,7 +32,7 @@ func GetOrCreateTodayIntake(c *gin.Context) {
 	err := config.DB.
 		Preload("Meals").
 		Preload("Comments").
-		Where("CustomerUserID = ? AND DATE(DI_Date) = ?", userID, todayStr).
+		Where("CustomerUsers_U_ID = ? AND DATE(DI_Date) = ?", userID, todayStr).
 		First(&intake).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -79,7 +79,7 @@ func GetDailyIntake(c *gin.Context) {
 	err := config.DB.
 		Preload("Meals").
 		Preload("Comments").
-		Where("CustomerUserID = ? AND DATE(DI_Date) = ?", userID, dateStr).
+		Where("CustomerUsers_U_ID = ? AND DATE(DI_Date) = ?", userID, dateStr).
 		First(&intake).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {

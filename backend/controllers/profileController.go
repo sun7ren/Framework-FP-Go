@@ -68,3 +68,24 @@ func UpdateProfile(c *gin.Context) {
 		"data":    user,
 	})
 }
+
+func GetProfile(c *gin.Context) {
+	uidInterface, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	uid := uidInterface.(string)
+
+	var user models.User
+	if err := config.DB.Where("U_ID = ?", uid).First(&user).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User profile not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Profile fetched successfully",
+		"data":    user,
+	})
+}

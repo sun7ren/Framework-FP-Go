@@ -60,6 +60,7 @@ export default function Register() {
   return (
     <>
       <HomeHeader />
+      <main className="min-h-screen mx-20 mt-10">
       <div className="mt-10 flex flex-row items-center px-4">
         <div className="w-1/2 flex justify-center items-center">
           <Image
@@ -123,6 +124,7 @@ export default function Register() {
           </p>
         </div>
       </div>
+      </main>
     </>
   );
 }
