@@ -244,7 +244,7 @@ func LockIntake(c *gin.Context) {
 	}
 
 	var intake models.DailyIntake
-	err := config.DB.Where("DI_ID = ? AND CustomerUserID = ?", diID, userID).First(&intake).Error
+	err := config.DB.Where("DI_ID = ? AND CustomerUsers_U_ID = ?", diID, userID).First(&intake).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "intake not found"})
 		return
