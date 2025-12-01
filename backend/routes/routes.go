@@ -30,7 +30,9 @@ func SetupRoutes(r *gin.Engine) {
 		protected.PUT("/intake/meal/:meal_id/edit", controllers.EditMeal)
 
 		// Nutritionist Routes
-		protected.GET("/nutritionist/intakes", controllers.GetAllIntakes)
-		protected.POST("/nutritionist/comment", controllers.AddComment)
+		protected.GET("/nutritionist/intakes", controllers.GetDashboardIntakes)
+		protected.GET("/logs/:user_id", controllers.GetUserLogs)
+
+		// protected.POST("/nutritionist/comment", controllers.AddComment)
 	}
 }

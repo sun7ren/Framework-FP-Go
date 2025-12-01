@@ -24,8 +24,9 @@ type DailyIntake struct {
 	DIIsLocked      bool      `gorm:"column:DI_isLocked;type:boolean;default:false" json:"is_locked"`
 	CustomerUserID  string    `gorm:"column:CustomerUsers_U_ID;type:varchar(50)" json:"user_id"`
 
-	Meals    []Meal    `gorm:"foreignKey:DailyIntakeID" json:"meals"`
-	Comments []Comment `gorm:"foreignKey:DailyIntakeID" json:"comments"`
+	CustomerUser User      `gorm:"foreignKey:CustomerUserID;references:UID" json:"customer_user"`
+	Meals        []Meal    `gorm:"foreignKey:DailyIntakeID" json:"meals"`
+	Comments     []Comment `gorm:"foreignKey:DailyIntakeID" json:"comments"`
 }
 
 type Meal struct {

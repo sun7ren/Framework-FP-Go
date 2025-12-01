@@ -4,75 +4,97 @@ import (
 	"fp-pbkk/config"
 	"fp-pbkk/models"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-// GET /api/nutritionist/intakes
-// View all daily intakes (Dashboard)
-func GetAllIntakes(c *gin.Context) {
-	// 1. Role Check
+type IntakeDashboardDTO struct {
+	DIID           string    `json:"di_id"`
+	Date           time.Time `json:"date"`
+	Username       string    `json:"username"`
+	TotalCalories  int       `json:"total_calories"`
+	BMR            float64   `json:"bmr"`
+	Status         string    `json:"status"`
+	CustomerUserID string    `json:"user_id"`
+}
+
+func GetDashboardIntakes(c *gin.Context) {
 	role, _ := c.Get("role")
 	if role != "Nutritionist" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied. Nutritionists only."})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
-	// 2. Fetch all intakes with User details
+	startDate := c.Query("start")
+	endDate := c.Query("end")
+
 	var intakes []models.DailyIntake
+	query := config.DB.
+		Preload("CustomerUser").
+		Order("DI_Date DESC")
 
-	// We preload 'Meals' and 'Comments' so the dashboard sees everything
-	if err := config.DB.Preload("Meals").Preload("Comments").Find(&intakes).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch intakes"})
+	if startDate != "" && endDate != "" {
+		query = query.Where("DI_Date BETWEEN ? AND ?", startDate, endDate)
+	}
+
+	err := query.Find(&intakes).Error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get dashboard intakes"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": intakes})
+	var output []IntakeDashboardDTO
+
+	for _, x := range intakes {
+		status := "Normal"
+
+		if float64(x.DITotalCalories) > x.CustomerUser.BMR {
+			status = "Above BMR"
+		} else if float64(x.DITotalCalories) < x.CustomerUser.BMR-200 {
+			status = "Below BMR"
+		}
+
+		output = append(output, IntakeDashboardDTO{
+			DIID:           x.DIID,
+			Date:           x.DIDate,
+			Username:       x.CustomerUser.Username,
+			TotalCalories:  x.DITotalCalories,
+			BMR:            x.CustomerUser.BMR,
+			Status:         status,
+			CustomerUserID: x.CustomerUserID,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": output})
 }
 
-// POST /api/nutritionist/comment
-type CommentInput struct {
-	DailyIntakeID string `json:"di_id" binding:"required"`
-	Content       string `json:"content" binding:"required"`
-}
+func GetUserLogs(c *gin.Context) {
+	userID := c.Param("user_id")
+	date := c.Query("date")
 
-func AddComment(c *gin.Context) {
-	// 1. Role Check
-	role, _ := c.Get("role")
-	userID, _ := c.Get("user_id") // This is the Nutritionist's ID
+	var logs []models.DailyIntake
 
-	if role != "Nutritionist" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied. Nutritionists only."})
+	query := config.DB.
+		Preload("Meals").
+		Preload("Comments").
+		Where("CustomerUsers_U_ID = ?", userID)
+
+	if date != "" {
+		query = query.Where("DI_Date = ?", date)
+	}
+
+	if err := query.Find(&logs).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"message": "Failed to fetch logs",
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	var input CommentInput
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// 2. Check if Nutritionist already commented on THIS specific intake
-	var existingComment models.Comment
-	err := config.DB.Where("NutritionistUsers_U_ID = ? AND Daily_Intakes_DI_ID = ?", userID, input.DailyIntakeID).First(&existingComment).Error
-
-	if err == nil {
-		// If err is nil, it means a record WAS found
-		c.JSON(http.StatusBadRequest, gin.H{"error": "You have already commented on this intake log."})
-		return
-	}
-
-	// 3. Create the Comment
-	comment := models.Comment{
-		CContent:       input.Content,
-		NutritionistID: userID.(string),
-		DailyIntakeID:  input.DailyIntakeID,
-	}
-
-	if err := config.DB.Create(&comment).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save comment"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Comment added successfully!", "data": comment})
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    logs,
+	})
 }
