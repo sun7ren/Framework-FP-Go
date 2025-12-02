@@ -33,6 +33,10 @@ func SetupRoutes(r *gin.Engine) {
 		protected.GET("/nutritionist/intakes", controllers.GetDashboardIntakes)
 		protected.GET("/logs/:user_id", controllers.GetUserLogs)
 
+		protected.POST("nutritionist/comments", controllers.AddComment)
+		protected.PUT("/nutritionist/comments/:id", controllers.UpdateComment)
+		protected.DELETE("/nutritionist/comments/:id", controllers.DeleteComment)
+
 		// protected.POST("/nutritionist/comment", controllers.AddComment)
 	}
 }

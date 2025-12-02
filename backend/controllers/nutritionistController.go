@@ -78,6 +78,7 @@ func GetUserLogs(c *gin.Context) {
 	query := config.DB.
 		Preload("Meals").
 		Preload("Comments").
+		Preload("Comments.Nutritionist").
 		Where("CustomerUsers_U_ID = ?", userID)
 
 	if date != "" {
@@ -97,4 +98,65 @@ func GetUserLogs(c *gin.Context) {
 		"success": true,
 		"data":    logs,
 	})
+}
+
+func AddComment(c *gin.Context) {
+	nutritionistID, _ := c.Get("user_id")
+
+	var input struct {
+		DIID    string `json:"di_id"`
+		Content string `json:"content"`
+	}
+
+	if err := c.BindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid body"})
+		return
+	}
+
+	comment := models.Comment{
+		CContent:       input.Content,
+		DailyIntakeID:  input.DIID,
+		NutritionistID: nutritionistID.(string),
+	}
+
+	if err := config.DB.Create(&comment).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create comment"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Comment added"})
+}
+
+func UpdateComment(c *gin.Context) {
+	cid := c.Param("id")
+
+	var body struct {
+		Content string `json:"content"`
+	}
+
+	if err := c.BindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid body"})
+		return
+	}
+
+	if err := config.DB.Model(&models.Comment{}).
+		Where("c_id = ?", cid).
+		Update("C_Content", body.Content).Error; err != nil {
+
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update comment"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Comment updated"})
+}
+
+func DeleteComment(c *gin.Context) {
+	cid := c.Param("id")
+
+	if err := config.DB.Delete(&models.Comment{}, "c_id = ?", cid).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete comment"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Comment deleted"})
 }
