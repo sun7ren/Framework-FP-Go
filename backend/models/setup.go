@@ -41,8 +41,8 @@ type Meal struct {
 type Comment struct {
 	CID            uint   `gorm:"primaryKey;autoIncrement" json:"c_id"`
 	CContent       string `gorm:"column:C_Content;type:varchar(150)" json:"content"`
-	NutritionistID string `gorm:"column:NutritionistUsers_U_ID;type:varchar(20)" json:"nutritionist_id"`
-	DailyIntakeID  string `gorm:"column:Daily_Intakes_DI_ID;type:varchar(20)" json:"di_id"`
+	NutritionistID string `gorm:"column:NutritionistUsers_U_ID;type:varchar(36)" json:"nutritionist_id"`
+	DailyIntakeID  string `gorm:"column:Daily_Intakes_DI_ID;type:varchar(50)" json:"di_id"`
 
 	Nutritionist User `gorm:"foreignKey:NutritionistID;references:UID" json:"nutritionist"`
 }

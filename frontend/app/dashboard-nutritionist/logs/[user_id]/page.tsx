@@ -10,11 +10,11 @@ export default function UserLogsPage({ params }: any) {
   const { user_id } = use(params) as { user_id: string };
   const searchParams = useSearchParams();
   const date = searchParams.get("date");
-  
+
   const [nutritionistId, setNutritionistId] = useState<string | null>(null);
-  
-   useEffect(() => {
-    const id = window.localStorage.getItem("uid");
+
+  useEffect(() => {
+    const id = window.localStorage.getItem("user_id");
     setNutritionistId(id);
   }, []);
 
@@ -137,7 +137,7 @@ export default function UserLogsPage({ params }: any) {
               )}
             </div>
 
-            
+
             <div className="mt-3 p-4 border rounded bg-white shadow">
               <p className="font-medium mb-2 text-[#665944]">Comments:</p>
 
@@ -166,31 +166,38 @@ export default function UserLogsPage({ params }: any) {
                       </div>
                     ) : (
                       <>
-                        <span>{c.content}</span>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => {
-                              setEditingId(c.c_id);
-                              setEditingContent(c.content);
-                            }}
-                            className="text-blue-600 underline"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteComment(c.c_id)}
-                            className="text-red-600 underline"
-                          >
-                            Delete
-                          </button>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-[#ED9417] mb-1">
+                            {c.nutritionist?.username || "Unknown Nutritionist"}
+                          </span>
+                          <span>{c.content}</span>
                         </div>
+                        {nutritionistId === c.nutritionist_id && (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                setEditingId(c.c_id);
+                                setEditingContent(c.content);
+                              }}
+                              className="text-blue-600 underline"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteComment(c.c_id)}
+                              className="text-red-600 underline"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
                       </>
                     )}
                   </li>
                 ))}
               </ul>
 
-             
+
               <div className="mt-4 flex gap-2">
                 <input
                   className="border px-3 py-2 rounded w-full"
@@ -208,7 +215,7 @@ export default function UserLogsPage({ params }: any) {
             </div>
           </div>
         ))}
-      </main>
+      </main >
     </>
   );
 }

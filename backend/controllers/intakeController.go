@@ -32,6 +32,7 @@ func GetOrCreateTodayIntake(c *gin.Context) {
 	err := config.DB.
 		Preload("Meals").
 		Preload("Comments").
+		Preload("Comments.Nutritionist").
 		Where("CustomerUsers_U_ID = ? AND DATE(DI_Date) = ?", userID, todayStr).
 		First(&intake).Error
 
@@ -44,7 +45,7 @@ func GetOrCreateTodayIntake(c *gin.Context) {
 			CustomerUserID:  userID,
 		}
 		config.DB.Create(&intake)
-		config.DB.Preload("Meals").Preload("Comments").First(&intake, "DI_ID = ?", intake.DIID)
+		config.DB.Preload("Meals").Preload("Comments").Preload("Comments.Nutritionist").First(&intake, "DI_ID = ?", intake.DIID)
 		c.JSON(http.StatusOK, intake)
 		return
 	}
@@ -79,6 +80,7 @@ func GetDailyIntake(c *gin.Context) {
 	err := config.DB.
 		Preload("Meals").
 		Preload("Comments").
+		Preload("Comments.Nutritionist").
 		Where("CustomerUsers_U_ID = ? AND DATE(DI_Date) = ?", userID, dateStr).
 		First(&intake).Error
 
@@ -92,7 +94,7 @@ func GetDailyIntake(c *gin.Context) {
 			CustomerUserID:  userID,
 		}
 		config.DB.Create(&newIntake)
-		config.DB.Preload("Meals").Preload("Comments").First(&newIntake)
+		config.DB.Preload("Meals").Preload("Comments").Preload("Comments.Nutritionist").First(&newIntake)
 		c.JSON(http.StatusOK, newIntake)
 		return
 	}

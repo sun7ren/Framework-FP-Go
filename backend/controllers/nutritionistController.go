@@ -129,6 +129,7 @@ func AddComment(c *gin.Context) {
 
 func UpdateComment(c *gin.Context) {
 	cid := c.Param("id")
+	nutritionistID, _ := c.Get("user_id")
 
 	var body struct {
 		Content string `json:"content"`
@@ -139,10 +140,19 @@ func UpdateComment(c *gin.Context) {
 		return
 	}
 
-	if err := config.DB.Model(&models.Comment{}).
-		Where("c_id = ?", cid).
-		Update("C_Content", body.Content).Error; err != nil {
+	// Check ownership before updating
+	var comment models.Comment
+	if err := config.DB.Where("c_id = ?", cid).First(&comment).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Comment not found"})
+		return
+	}
 
+	if comment.NutritionistID != nutritionistID.(string) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You can only edit your own comments"})
+		return
+	}
+
+	if err := config.DB.Model(&comment).Update("C_Content", body.Content).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update comment"})
 		return
 	}
@@ -152,8 +162,21 @@ func UpdateComment(c *gin.Context) {
 
 func DeleteComment(c *gin.Context) {
 	cid := c.Param("id")
+	nutritionistID, _ := c.Get("user_id")
 
-	if err := config.DB.Delete(&models.Comment{}, "c_id = ?", cid).Error; err != nil {
+	// Check ownership before deleting
+	var comment models.Comment
+	if err := config.DB.Where("c_id = ?", cid).First(&comment).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Comment not found"})
+		return
+	}
+
+	if comment.NutritionistID != nutritionistID.(string) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You can only delete your own comments"})
+		return
+	}
+
+	if err := config.DB.Delete(&comment).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete comment"})
 		return
 	}

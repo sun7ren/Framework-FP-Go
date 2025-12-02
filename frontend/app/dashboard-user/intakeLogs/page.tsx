@@ -241,6 +241,24 @@ export default function IntakeLogsPage() {
           </tbody>
         </table>
 
+        {/* Comments Section */}
+        {intake?.comments && intake.comments.length > 0 && (
+          <div className="mt-8 mb-10">
+            <h2 className="text-2xl font-bold text-[#774D06] mb-4">Nutritionist Comments</h2>
+            <div className="flex flex-col gap-4">
+              {intake.comments.map((comment) => (
+                <div key={comment.c_id} className="bg-white border border-[#B2A48C] rounded-lg p-4 shadow-sm">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="font-bold text-[#ED9417]">{comment.nutritionist?.username || "Nutritionist"}</span>
+                    <span className="text-sm text-gray-500">commented:</span>
+                  </div>
+                  <p className="text-[#4A3A1E]">{comment.content}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Modals */}
         {showAddModal && (
           <Modal
